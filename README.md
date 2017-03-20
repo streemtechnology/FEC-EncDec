@@ -7,3 +7,7 @@ sudo pip install python-librtmp
 
 apt-get install librtmp-dev libffi-dev
 
+
+## Pylonghair 
+
+* https://github.com/sampot/pylonghair
