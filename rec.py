@@ -7,16 +7,16 @@ conn = librtmp.RTMP("rtmp://188.138.17.8:1935/albuk/albuk.stream", live=True)
 conn.connect()
 # Get a file-like object to access to the stream
 stream = conn.create_stream()
-k = 30
-m = 6
-block_size = 64
+k = 8
+m = 4
+block_size = 128
 parity = bytearray(m * block_size)
 data = 0
 count =0
 # Read 1024 bytes of data
 while(count<1):
         data = stream.read(1024)
-	print len(data)
+	#print len(data)
         #cauchy_256_encode(k, m, data_ptrs, recovery_blocks, bytes)
         #_fec_encode(int k, int m, int block_size, unsigned char* data, unsigned char* parity)
         # 
@@ -24,19 +24,24 @@ while(count<1):
         #for par in parity:
         #    print par
         count+=1
-print len(parity)
+#print len(parity)
 blocks = []
+# artifica=ially removed the first byte
+blocks.append((0, bytearray(parity[0:block_size])))
+# add the remaining blocks to the transfer
 for row in range(k-1):
+        row+=1
         offset = row * block_size
         block_data = data[offset:offset + block_size]
         blocks.append((row, block_data))
 
-blocks.append((k, bytearray(parity[:block_size])))
 fec_decode(k, m, block_size, blocks)
-print "*********************\n"
+offset =0
+print "First decoded block*********************\n"
+print blocks[0][1]
+print "All blocks*********************\n"
+for x in blocks: print "**" ,x
 
-for x in blocks: print "**" ,x[1]
-
-print "*********************\n"
-print data
-print "*********************\n"
+print "Data block*********************\n"
+print data[offset:offset+block_size]
+print "End*********************\n"
