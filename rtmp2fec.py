@@ -1,7 +1,6 @@
 import os, sys
 import librtmp
 from pylonghair import fec_encode, fec_decode
-# Create a connection
 
 
 def get_stream():
@@ -17,7 +16,7 @@ def get_bytes(stream):
     while True:
         data = stream.read(9600)
         if data:
-            if len(data) > 819:
+            if len(data) > 8192:
                 print "Cant handle more than 8192 bytes right now"
                 sys.exit(0)
             encode_to_fec(data)
