@@ -72,11 +72,13 @@ def construct_rtmp(blocks):
     """
     A client can publish a stream by calling RTMP_EnableWrite() before the RTMP_Connect() call, and then using RTMP_Write() after the session is established
     """
+    data = bytearray()
     for block in blocks:
         #print blocks, block
-        rtmpwritestream.write(block[1])
+	data+=block[1]
+        #rtmpwritestream.write(block[1])
         #print rtmpwritestream.write(block[0])
-    #rtmpwritestream.write(blocks)
+    rtmpwritestream.write(data)
 
 if __name__ == '__main__':
     get_stream()
