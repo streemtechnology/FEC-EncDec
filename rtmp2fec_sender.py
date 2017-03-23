@@ -41,11 +41,12 @@ def encode_to_fec(data,sock,sock1):
             offset = row * block_size
             block_data = data[offset:offset + block_size]
             blocks.append((row, block_data))
-        send_fec_data( parity, data,sock,sock1)
+        send_fec_data( parity, blocks,sock,sock1)
 
-def send_fec_data(parity,data,sock,sock1):
-   sock1.send(data)
-   sock.send(parity)
+def send_fec_data(parity,blocks,sock,sock1):
+   for block in blocks:
+       sock1.send(str(block))
+   #sock.send(parity)
 
 if __name__ == '__main__':
     get_stream()
