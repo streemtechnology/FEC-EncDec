@@ -9,13 +9,12 @@ def get_stream():
     rtmpcall = conn.connect()
     print "Transaction ID" , rtmpcall.transaction_id, "\n Result of the Call", rtmpcall.result()
     rtmpstream = conn.create_stream()
-    sock = socket(AF_INET, SOCK_DGRAM)
-    sock1 = socket(AF_INET,SOCK_DGRAM)
-    sock.connect(('127.0.0.1', 5005))#parity data
-    sock1.connect(('127.0.0.1',5006))# stream data
+    sock = socket(AF_INET,SOCK_DGRAM)
+    sock.connect(('127.0.0.1',5006))# stream data
     get_bytes(rtmpstream,sock,sock1)
 
-def get_bytes(stream,sock,sock1):
+def get_bytes(stream,sock):
+    frame =0
     while True:
         data = stream.read(8192)
         #rtmpwritestream.write(data) # This works perfectly
@@ -23,12 +22,13 @@ def get_bytes(stream,sock,sock1):
             if len(data) > 8192:
                 print "Cant handle more than 8192 bytes right now, Got bytes: ", len(data)
                 sys.exit(0)
-            encode_to_fec(data,sock,sock1)
+            encode_to_fec(data,sock,frame%8)
+            frame+=1
         else:
             print "Waiting for Data on the Stream"
             sys.exit(0)
 
-def encode_to_fec(data,sock,sock1):
+def encode_to_fec(data,sock,frame):
     block_size = 512
     k = 16   # 512*16 = 8192 send all blocks of received data
     m = 4
@@ -40,10 +40,10 @@ def encode_to_fec(data,sock,sock1):
         for row in range(k):
             offset = row * block_size
             block_data = data[offset:offset + block_size]
-            blocks.append((row, block_data))
-        send_fec_data( parity, blocks,sock,sock1)
+            blocks.append((frame, row, block_data))
+        send_fec_data( parity, blocks,sock)
 
-def send_fec_data(parity,blocks,sock,sock1):
+def send_fec_data(parity,blocks,sock):
    for block in blocks:
        sock1.send(str(block))
    #sock.send(parity)
