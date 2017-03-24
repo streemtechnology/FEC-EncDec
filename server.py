@@ -18,16 +18,16 @@ def receive_write_stream():
 
 def get_bytes(sock,stream):
     while True:
-        data,addr = sock.recvfrom(512)
+        data,addr = sock.recvfrom(5120)
         #rtmpwritestream.write(data) # This works perfectly
         if data:
-            if len(data) > 512:
+            if len(data) > 5120:
                 print "Cant handle more than 8192 bytes right now, Got bytes: ", len(data)
                 sys.exit(0)
             #decode_from_fec(data,stream)
-	    print cPickle.loads(data)
+	    data = cPickle.loads(data)
             #data = tuple(data[0].split(','))
-            decode_from_fec(data[0].split('(')[1],data[1],stream)
+            decode_from_fec(data[0],data[1],stream)
         else:
             print "Waiting for Data on the Stream"
             sys.exit(0)
