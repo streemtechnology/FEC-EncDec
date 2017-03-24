@@ -4,6 +4,7 @@ import librtmp
 from pylonghair import fec_encode, fec_decode
 import cPickle
 
+frame =range(8)
 recv_count = 0
 block_data = bytearray(16*512)
 
@@ -27,16 +28,19 @@ def get_bytes(sock,stream):
             #decode_from_fec(data,stream)
 	    data = cPickle.loads(data)
             #data = tuple(data[0].split(','))
-            decode_from_fec(data[0],data[1],stream)
+            decode_from_fec(data[0][0],data[0][1],data[1],stream)
         else:
             print "Waiting for Data on the Stream"
             sys.exit(0)
 
-def decode_from_fec(row,data,stream):
+def decode_from_fec(frame,row,data,stream):
     global recv_count
     global block_data
     block_size =512
     k = 16
+    
+    # wait for total decode
+    
     offset  = int(row)*block_size
     block_data[offset:offset+block_size] = data
     recv_count+=1
@@ -55,9 +59,8 @@ def decode_from_fec(row,data,stream):
         recv_count =0
         try:
             stream.write(block_data)   
-        except IOError:
-            print "error" 
-                        
+        except IOError as e:
+            print "I/O error" , e                        
  
     
     # decode using below for row > k and check for frame 
