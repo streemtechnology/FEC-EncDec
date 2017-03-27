@@ -4,9 +4,10 @@ import librtmp
 from pylonghair import fec_encode, fec_decode
 import cPickle
 
-frame =range(8)
-recv_count = 0
-block_data = bytearray(16*512)
+#sequence =  list( {} for i in xrange(8) )
+sequence = list(range(16) for i in xrange(8))
+in_progress = list( 0 for i in xrange(8))
+cur_send = 0
 
 def receive_write_stream():
     UDP_IP = "127.0.0.1"
@@ -34,34 +35,34 @@ def get_bytes(sock,stream):
             sys.exit(0)
 
 def decode_from_fec(frame,row,data,stream):
-    global recv_count
-    global block_data
+    global sequence
+    global in_progress
+    global cur_send
     block_size =512
     k = 16
-    
+    #print "recv", frame, row
     # wait for total decode
-    
-    offset  = int(row)*block_size
-    block_data[offset:offset+block_size] = data
-    recv_count+=1
-    #if recv_count ==0:
-    #    block_data[offset:offset+block_size] = data
-    #	recv_count+=1
-    #else:
-        # havent seen this block before
-    #    block_data[offset:offset+block_size] = data
-    #    recv_count+=1
-        #if block_data[row]!=0:
-	#    block_data[row:row+block_size] = data
-	#    recv_count+=1
+    if in_progress[frame]==0:
+        sequence[frame][row]= data
+        in_progress[frame]+=1
+        print "added to", frame, row
+
     # if received all blocks
-    if recv_count == 16:
-        recv_count =0
-        try:
-            stream.write(block_data)   
-        except IOError as e:
-            print "I/O error" , e                        
- 
+    for index in xrange(cur_send,8):
+        if in_progress[index]==16:
+            try:
+                construct_rtmp(sequence[index],stream)
+                in_progress[index] = 0
+                cur_send = (index+1)%8
+                if cur_send !=7:
+                    print index , 
+                else:
+                    print index,"\n"
+            except IOError as e:
+                print "I/O Error" , e
+        else:
+            return
+	    
     
     # decode using below for row > k and check for frame 
     #decoded_data = fec_decode(k, m, block_size, blocks)
@@ -75,10 +76,7 @@ def construct_rtmp(blocks,stream):
     """
     data = bytearray()
     for block in blocks:
-        #print blocks, block
-        data+=block[1]
-        #rtmpwritestream.write(block[1])
-        #print rtmpwritestream.write(block[0])
+        data+=block
     stream.write(data)
 
 if __name__ == '__main__':
