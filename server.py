@@ -42,10 +42,10 @@ def decode_from_fec(frame,row,data,stream):
     k = 16
     #print "recv", frame, row
     # wait for total decode
-    if in_progress[frame]==0:
+    if in_progress[frame]<16:
         sequence[frame][row]= data
         in_progress[frame]+=1
-        print "added to", frame, row
+        #print "added to", frame, row, in_progress
 
     # if received all blocks
     for index in xrange(cur_send,8):
