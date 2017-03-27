@@ -45,19 +45,16 @@ def decode_from_fec(frame,row,data,stream):
     if in_progress[frame]<16:
         sequence[frame][row]= data
         in_progress[frame]+=1
-        #print "added to", frame, row, in_progress
+        print "added to frame ", frame, " block" , row
 
     # if received all blocks
     for index in xrange(cur_send,8):
         if in_progress[index]==16:
             try:
-                construct_rtmp(sequence[index],stream)
+                construct_rtmp(sequence[index],stream, index)
+                sequence[index] = range(16)
                 in_progress[index] = 0
                 cur_send = (index+1)%8
-                if cur_send !=7:
-                    print index , 
-                else:
-                    print index,"\n"
             except IOError as e:
                 print "I/O Error" , e
         else:
@@ -70,7 +67,7 @@ def decode_from_fec(frame,row,data,stream):
     #    construct_rtmp(blocks,stream)
 
 
-def construct_rtmp(blocks,stream):
+def construct_rtmp(blocks,stream, frame):
     """
     A client can publish a stream by calling RTMP_EnableWrite() before the RTMP_Connect() call, and then using RTMP_Write() after the session is established
     """
@@ -78,6 +75,7 @@ def construct_rtmp(blocks,stream):
     for block in blocks:
         data+=block
     stream.write(data)
+    print "wrote frame" , frame
 
 if __name__ == '__main__':
     receive_write_stream()
