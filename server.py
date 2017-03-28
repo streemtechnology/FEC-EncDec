@@ -8,6 +8,8 @@ import cPickle
 sequence = list(range(16) for i in xrange(8))
 in_progress = list( 0 for i in xrange(8))
 cur_send = 0
+parity = list(range(4) for i in xrange(8))
+par_progress = list(0 for i in xrange(8))
 
 def receive_write_stream():
     UDP_IP = "127.0.0.1"
@@ -32,17 +34,22 @@ def get_bytes(sock,stream):
             if data[0][1] < 16:
                 decode_from_fec(data[0][0],data[0][1],data[1],stream)
             else:
-                decode_parity(data[0][0],data[0][1],data[1])
+                fill_parity(data[0][0],data[0][1],data[1])
         else:
             print "Waiting for Data on the Stream"
             sys.exit(0)
 
-def decode_parity(frame,row,data):
-    
-    #construct and do fec_decode
-    #print "fec" , frame, row 
-
-    #fec_decode(16, 4, 512, blocks)
+def fill_parity(frame,row,data):
+    global parity
+    global par_progress
+    if par_progress[frame]<4:
+        if parity[frame][row] == row:
+	    parity[frame][row] = data
+            par_progress[frame]+=1
+        else:
+            parity[frame] = range(4)
+            parity[frame][row] = data
+            par_progress[frame] =1
     return
 
 def decode_from_fec(frame,row,data,stream):
