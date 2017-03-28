@@ -44,6 +44,10 @@ def encode_to_fec(data,sock,frame):
             offset = row * block_size
             block_data = data[offset:offset + block_size]
             blocks.append(( (frame,row), block_data))
+        for row in range(m):
+            offset = row * block_size
+            block_data = parity[offset:offset + block_size]
+            blocks.append(((frame,row+k),block_data))
             #print ((row,block_data))
         send_fec_data( parity, blocks,sock)
 

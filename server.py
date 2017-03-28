@@ -29,10 +29,21 @@ def get_bytes(sock,stream):
             #decode_from_fec(data,stream)
 	    data = cPickle.loads(data)
             #data = tuple(data[0].split(','))
-            decode_from_fec(data[0][0],data[0][1],data[1],stream)
+            if data[0][1] < 16:
+                decode_from_fec(data[0][0],data[0][1],data[1],stream)
+            else:
+                decode_parity(data[0][0],data[0][1],data[1])
         else:
             print "Waiting for Data on the Stream"
             sys.exit(0)
+
+def decode_parity(frame,row,data):
+    
+    #construct and do fec_decode
+    #print "fec" , frame, row 
+
+    #fec_decode(16, 4, 512, blocks)
+    return
 
 def decode_from_fec(frame,row,data,stream):
     global sequence
@@ -43,10 +54,15 @@ def decode_from_fec(frame,row,data,stream):
     #print "recv", frame, row
     # wait for total decode
     if in_progress[frame]<16:
-        sequence[frame][row]= data
-        in_progress[frame]+=1
-        print "added to frame ", frame, " block" , row
-
+        if sequence[frame][row]==row:
+            sequence[frame][row]= data
+            in_progress[frame]+=1
+            #print "added to frame ", frame, " block" , row
+        else:
+            sequence[frame] = range(16)
+            sequence[frame][row] = data
+            in_progress[frame] =1
+            cur_send = (cur_send+1)%8
     # if received all blocks
     for index in xrange(cur_send,8):
         if in_progress[index]==16:
@@ -58,6 +74,11 @@ def decode_from_fec(frame,row,data,stream):
             except IOError as e:
                 print "I/O Error" , e
         else:
+       #     if in_progress[(index+1)%8]==16 and in_progress[(index+2)%8]==16:
+       #         sequence[index] = range(16)
+       #         in_progress[index] =0
+       #         cur_send = (index+1)%8
+       #     else:
             return
 	    
     
@@ -75,7 +96,10 @@ def construct_rtmp(blocks,stream, frame):
     for block in blocks:
         data+=block
     stream.write(data)
-    print "wrote frame" , frame
+    if frame !=7:
+        print  frame,
+    else: 
+        print frame 
 
 if __name__ == '__main__':
     receive_write_stream()
